@@ -15,7 +15,7 @@ function ConstellationLines({ points, hovered }) {
   const lineGeometry = new THREE.BufferGeometry().setFromPoints(linePoints);
 
   return (
-    <line>
+    <line renderOrder={1}>
       <primitive object={lineGeometry} attach="geometry" />
       <lineBasicMaterial
         attach="material"
@@ -41,9 +41,10 @@ function Constellation({
   setHoveredCategory,
   setHoveredSkill,
 }) {
+  // True if this constellation is the one currently hovered
   const isHovered = hoveredCategory === category.name;
 
-  // Map skill positions and build line segments
+  // Build line segments between skill points
   const skillPoints = category.skills.map(({ x, y }) => [x, y]);
   const lines = [];
   for (let i = 0; i < skillPoints.length - 1; i++) {
@@ -51,35 +52,59 @@ function Constellation({
   }
 
   return (
-    <group
-      position={position}
-      scale={isHovered ? 1.3 : 1}
-      onPointerOver={() => setHoveredCategory(category.name)}
-      onPointerOut={() => setHoveredCategory(null)}
-    >
-      {/* Center icon */}
+    <group position={position} scale={isHovered ? 1.3 : 1}>
+      {/* 
+        Invisible bounding sphere for hover detection. Render first and ensure
+        it does not block rendering of other elements.
+      */}
+      <mesh
+        renderOrder={-1}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          setHoveredCategory(category.name);
+        }}
+        onPointerOut={(e) => {
+          e.stopPropagation();
+          if (hoveredCategory === category.name) {
+            setHoveredCategory(null);
+          }
+        }}
+      >
+        <sphereGeometry args={[4.5 + category.skills.length * 0.15, 16, 16]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+
+      {/* Category Icon / Title */}
       <Text
         position={[0, 3.5, 0]}
         fontSize={1.1}
         color={isHovered ? '#ffcc00' : '#ffffff'}
         anchorX="center"
         anchorY="middle"
+        renderOrder={2}
       >
         {category.icon}
       </Text>
 
-      {/* Lines */}
+      {/* Lines (constellation connections) */}
       {lines.map((pair, idx) => (
         <ConstellationLines key={idx} points={pair} hovered={isHovered} />
       ))}
 
-      {/* Stars */}
+      {/* Stars (skills) */}
       {category.skills.map((skill) => (
         <group key={skill.name} position={[skill.x, skill.y, 0]}>
-          {/* Star */}
+          {/* Star sphere */}
           <mesh
-            onPointerOver={() => setHoveredSkill(skill.name)}
-            onPointerOut={() => setHoveredSkill(null)}
+            renderOrder={3}
+            onPointerOver={(e) => {
+              e.stopPropagation(); // So we don’t exit the bounding sphere
+              setHoveredSkill(skill.name);
+            }}
+            onPointerOut={(e) => {
+              e.stopPropagation();
+              setHoveredSkill(null);
+            }}
           >
             <sphereGeometry args={[0.3, 16, 16]} />
             <meshStandardMaterial
@@ -89,7 +114,7 @@ function Constellation({
             />
           </mesh>
 
-          {/* Skill name (visible only when hovered) */}
+          {/* Display skill name if constellation is hovered */}
           {isHovered && (
             <Text
               position={[0, 0.6, 0]}
@@ -97,6 +122,7 @@ function Constellation({
               color="#ffffff"
               anchorX="center"
               anchorY="middle"
+              renderOrder={4}
             >
               {skill.name}
             </Text>
@@ -132,7 +158,7 @@ export default function Skills() {
   return (
     <div className="relative w-full h-full" style={{ height: '100vh' }}>
       <Canvas camera={{ position: [0, 0, 50], fov: 45 }}>
-        {/* Subtle camera control to "fake" perspective */}
+        {/* Minimal camera movement; perspective unchanged */}
         <OrbitControls
           enablePan={false}
           enableZoom={false}
@@ -155,12 +181,13 @@ export default function Skills() {
           fade
         />
 
-        {/* Lighting */}
+        {/* Basic Lighting */}
         <ambientLight intensity={0.4} />
         <directionalLight intensity={0.6} position={[20, 20, 20]} />
 
         {/* Constellations */}
         {skillData.map((category, index) => {
+          // Position each constellation in a circle
           const angle = (index / skillData.length) * Math.PI * 2;
           const x = Math.cos(angle) * CONSTELLATION_RADIUS;
           const y = Math.sin(angle) * CONSTELLATION_RADIUS;
