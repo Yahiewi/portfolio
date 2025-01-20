@@ -1,0 +1,5 @@
+/* Global styles applied across the entire React project. */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
