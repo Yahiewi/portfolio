@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+/* eslint-disable react/no-unknown-property */
+import { useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stars, Text } from '@react-three/drei';
 import skillData from '../../data/skillData'; // Import skill data
+import PropTypes from 'prop-types';
 import * as THREE from 'three';
 
 // Constants
@@ -26,8 +28,19 @@ function ConstellationLines({ points, hovered }) {
   );
 }
 
+ConstellationLines.propTypes = {
+  points: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)).isRequired,
+  hovered: PropTypes.bool.isRequired,
+};
+
 // Render a single constellation
-function Constellation({ category, position, hoveredCategory, setHoveredCategory, setHoveredSkill }) {
+function Constellation({
+  category,
+  position,
+  hoveredCategory,
+  setHoveredCategory,
+  setHoveredSkill,
+}) {
   const isHovered = hoveredCategory === category.name;
 
   // Map skill positions and build line segments
@@ -94,20 +107,30 @@ function Constellation({ category, position, hoveredCategory, setHoveredCategory
   );
 }
 
+Constellation.propTypes = {
+  category: PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    icon: PropTypes.string.isRequired,
+    skills: PropTypes.arrayOf(
+      PropTypes.shape({
+        name: PropTypes.string.isRequired,
+        x: PropTypes.number.isRequired,
+        y: PropTypes.number.isRequired,
+      })
+    ).isRequired,
+  }).isRequired,
+  position: PropTypes.arrayOf(PropTypes.number).isRequired,
+  hoveredCategory: PropTypes.string,
+  setHoveredCategory: PropTypes.func.isRequired,
+  setHoveredSkill: PropTypes.func.isRequired,
+};
+
 export default function Skills() {
   const [hoveredSkill, setHoveredSkill] = useState(null);
   const [hoveredCategory, setHoveredCategory] = useState(null);
 
   return (
     <div className="relative w-full h-full" style={{ height: '100vh' }}>
-      {/* Title and hovered skill display */}
-      <div className="absolute top-5 left-1/2 transform -translate-x-1/2 z-10 text-white text-center">
-        <h1 className="text-3xl font-bold mb-2">Skills</h1>
-        <p className="bg-black/50 px-4 py-2 rounded-md">
-          {hoveredSkill ?? 'Hover a star'}
-        </p>
-      </div>
-
       <Canvas camera={{ position: [0, 0, 50], fov: 45 }}>
         {/* Subtle camera control to "fake" perspective */}
         <OrbitControls
