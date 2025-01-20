@@ -152,6 +152,7 @@ Constellation.propTypes = {
 };
 
 export default function Skills() {
+  // eslint-disable-next-line no-unused-vars
   const [hoveredSkill, setHoveredSkill] = useState(null);
   const [hoveredCategory, setHoveredCategory] = useState(null);
 
