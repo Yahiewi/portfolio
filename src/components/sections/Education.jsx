@@ -1,91 +1,195 @@
-/* eslint-disable react/no-unknown-property */
-import  { useState } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Stars, Text } from '@react-three/drei';
+import { useRef, useEffect } from 'react';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-// Simple pillar component
-function Pillar({ title, details, position }) {
-  const [hovered, setHovered] = useState(false);
-
-  return (
-    <group position={position}>
-      {/* The "pillar" shape */}
-      <mesh
-        onPointerOver={() => setHovered(true)}
-        onPointerOut={() => setHovered(false)}
-      >
-        {/* Cylinder geometry to stand in as a pillar */}
-        <cylinderGeometry args={[1, 1, 6, 32]} />
-        <meshStandardMaterial color={hovered ? '#fbb034' : '#888888'} />
-      </mesh>
-
-      {/* Hover text */}
-      {hovered && (
-        <Text
-          position={[0, 3.5, 0]}
-          fontSize={0.25}
-          color="#ffffff"
-          anchorX="center"
-          anchorY="middle"
-          outlineWidth={0.002}
-          outlineColor="#000000"
-        >
-          {title}
-          {'\n'}
-          {details}
-        </Text>
-      )}
-    </group>
-  );
-}
+gsap.registerPlugin(ScrollTrigger);
 
 export default function Education() {
-  // You can expand or refine these details as needed
-  const educationStages = [
-    {
-      title: 'Preparatory Classes (2020 - 2022)\nIPEST, Tunis',
-      details: `Results:\n• Passed CCMP\n• Centrale-Supélec\n• CCINP\n• National entrance exams`
-    },
-    {
-      title: 'Engineering Degree (2022 - 2025)\nIMT Atlantique',
-      details: `1st year:\n• Probability, Stats, Signal Processing, ...\n\n2nd & 3rd year (Software Dev):\n• OOP, Functional, Design Patterns, Crypto, ...`
-    },
-    {
-      // Example third pillar for demonstration; 
-      // you can remove or repurpose it if you only need two pillars
-      title: 'Future Specializations\n(Placeholder)',
-      details: `Example:\n• Machine Learning\n• Cloud Computing\n• Entrepreneurship ...`
-    }
-  ];
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      // Create our main timeline that controls the 5 floors.
+      // We pin the entire section and give it enough scroll distance
+      // for each floor fade in/out.
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: 'top top',
+          end: '+=5000',    // total scroll distance; adjust as needed
+          pin: true,        // pin the section
+          scrub: 1,         // smooth scrubbing
+        },
+      });
+
+      // 5 floors => 4 transitions (Floor1->Floor2, Floor2->Floor3, etc.)
+      // We'll do fade out / fade in for each.
+
+      // FLOOR 1: keep visible at first
+      tl.fromTo('.floor-1', { autoAlpha: 1 }, { autoAlpha: 1, duration: 0.5 });
+
+      // Fade floor-1 out, floor-2 in
+      tl.to('.floor-1', { autoAlpha: 0, duration: 1 });
+      tl.fromTo('.floor-2', { autoAlpha: 0 }, { autoAlpha: 1, duration: 1 });
+
+      // Fade floor-2 out, floor-3 in
+      tl.to('.floor-2', { autoAlpha: 0, duration: 1 });
+      tl.fromTo('.floor-3', { autoAlpha: 0 }, { autoAlpha: 1, duration: 1 });
+
+      // Fade floor-3 out, floor-4 in
+      tl.to('.floor-3', { autoAlpha: 0, duration: 1 });
+      tl.fromTo('.floor-4', { autoAlpha: 0 }, { autoAlpha: 1, duration: 1 });
+
+      // Fade floor-4 out, floor-5 in
+      tl.to('.floor-4', { autoAlpha: 0, duration: 1 });
+      tl.fromTo('.floor-5', { autoAlpha: 0 }, { autoAlpha: 1, duration: 1 });
+    }, containerRef);
+
+    return () => ctx.revert();
+  }, []);
 
   return (
-    <div className="w-full h-full" style={{ height: '100vh' }}>
-      <Canvas camera={{ position: [0, 0, 15], fov: 45 }}>
-        {/* Basic controls & starry background */}
-        <OrbitControls enablePan={false} enableZoom={false} maxPolarAngle={Math.PI / 2} />
-        <Stars radius={100} depth={50} count={2500} factor={4} fade />
+    <section
+      ref={containerRef}
+      className="relative w-full min-h-screen overflow-hidden text-white bg-black"
+    >
+      {/* Optional: If you want a global background fade or starfield, place it here. */}
+      {/* <img
+        src="/images/starfield.jpg"
+        alt="Starfield"
+        className="absolute inset-0 w-full h-full object-cover"
+      /> */}
 
-        {/* Lights */}
-        <ambientLight intensity={0.5} />
-        <directionalLight intensity={0.7} position={[10, 10, 10]} />
+      {/* 
+        We'll place all floors as absolute overlays (same size, same position).
+        We'll let GSAP fade them in/out in sequence.
+      */}
+      <div className="absolute inset-0">
+        {/* ====== FLOOR 1: Preparatory Classes Year 1 ====== */}
+        <div
+          className="
+            floor-1
+            absolute inset-0
+            flex flex-col items-center justify-center text-center
+            px-4
+            transition-opacity
+          "
+          style={{
+            // Example background or inline style
+            backgroundImage: 'url("/images/ground.jpg")',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        >
+          <h2 className="text-4xl font-bold mb-4">Preparatory Classes – Year 1</h2>
+          <p className="text-lg max-w-lg mb-4">
+            <strong>2020–2021</strong> at IPEST, Tunis <br />
+            Foundations in Mathematics &amp; Physics
+          </p>
+          <p className="opacity-80">You are on the <strong>Ground Level</strong>.</p>
+        </div>
 
-        {/* Layout the pillars. Adjust positions as you like */}
-        <Pillar
-          title={educationStages[0].title}
-          details={educationStages[0].details}
-          position={[-4, 0, 0]}
-        />
-        <Pillar
-          title={educationStages[1].title}
-          details={educationStages[1].details}
-          position={[0, 0, 0]}
-        />
-        <Pillar
-          title={educationStages[2].title}
-          details={educationStages[2].details}
-          position={[4, 0, 0]}
-        />
-      </Canvas>
-    </div>
+        {/* ====== FLOOR 2: Preparatory Classes Year 2 ====== */}
+        <div
+          className="
+            floor-2
+            absolute inset-0
+            flex flex-col items-center justify-center text-center
+            px-4
+            transition-opacity
+          "
+          style={{
+            // Example background or inline style
+            backgroundImage: 'url("/images/skyscraper.jpg")',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            opacity: 0, // Start hidden
+          }}
+        >
+          <h2 className="text-4xl font-bold mb-4">Preparatory Classes – Year 2</h2>
+          <p className="text-lg max-w-lg mb-4">
+            <strong>2021–2022</strong> at IPEST, Tunis <br />
+            Passed CCMP, Centrale-Supélec, CCINP, and national exams
+          </p>
+          <p className="opacity-80">We’ve reached the <strong>Skyscraper Level</strong>.</p>
+        </div>
+
+        {/* ====== FLOOR 3: Engineering Year 1 ====== */}
+        <div
+          className="
+            floor-3
+            absolute inset-0
+            flex flex-col items-center justify-center text-center
+            px-4
+            transition-opacity
+          "
+          style={{
+            backgroundImage: 'url("/images/plane.jpg")',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            opacity: 0,
+          }}
+        >
+          <h2 className="text-4xl font-bold mb-4">Engineering – 1st Year</h2>
+          <p className="text-lg max-w-lg mb-4">
+            <strong>2022–2023</strong> at IMT Atlantique <br />
+            Probability, Statistics, Signal Processing, Physics, Programming...
+          </p>
+          <p className="opacity-80">
+            We are now at the <strong>Commercial Plane Level</strong>.
+          </p>
+        </div>
+
+        {/* ====== FLOOR 4: Engineering Year 2 ====== */}
+        <div
+          className="
+            floor-4
+            absolute inset-0
+            flex flex-col items-center justify-center text-center
+            px-4
+            transition-opacity
+          "
+          style={{
+            backgroundImage: 'url("/images/nearspace.jpg")',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            opacity: 0,
+          }}
+        >
+          <h2 className="text-4xl font-bold mb-4">Engineering – 2nd Year</h2>
+          <p className="text-lg max-w-lg mb-4">
+            <strong>2023–2024</strong> (Software Development Specialization)
+            <br />
+            OOP, Functional Paradigm, Design Patterns, Cryptography, Microservices...
+          </p>
+          <p className="opacity-80">Welcome to <strong>Near Space Orbit</strong>.</p>
+        </div>
+
+        {/* ====== FLOOR 5: Engineering Year 3 ====== */}
+        <div
+          className="
+            floor-5
+            absolute inset-0
+            flex flex-col items-center justify-center text-center
+            px-4
+            transition-opacity
+          "
+          style={{
+            backgroundImage: 'url("/images/outerspace.jpg")',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            opacity: 0,
+          }}
+        >
+          <h2 className="text-4xl font-bold mb-4">Engineering – 3rd Year</h2>
+          <p className="text-lg max-w-lg mb-4">
+            <strong>2024–2025</strong> (Software Dev. Continuation)
+            <br />
+            Advanced topics, specialized projects, final internships
+          </p>
+          <p className="opacity-80">We’ve reached <strong>Deep Space</strong>!</p>
+        </div>
+      </div>
+    </section>
   );
 }
