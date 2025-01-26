@@ -9,185 +9,135 @@ export default function Education() {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Create our main timeline that controls the 5 floors.
-      // We pin the entire section and give it enough scroll distance
-      // for each floor fade in/out.
-      const tl = gsap.timeline({
+      // Main timeline controlling 5 backgrounds + 5 text blocks.
+      const mainTl = gsap.timeline({
         scrollTrigger: {
           trigger: containerRef.current,
           start: 'top top',
-          end: '+=5000',    // total scroll distance; adjust as needed
-          pin: true,        // pin the section
-          scrub: 1,         // smooth scrubbing
+          end: '+=5000',    // Total scroll distance; tweak as needed
+          pin: true,
+          scrub: 1,         // Smooth scrubbing
         },
       });
 
-      // 5 floors => 4 transitions (Floor1->Floor2, Floor2->Floor3, etc.)
-      // We'll do fade out / fade in for each.
+      // Background transitions (fade in/out)
+      mainTl.fromTo('.bg-1', { autoAlpha: 1 }, { autoAlpha: 1, duration: 0.1 }, 0); // Ground remains visible at first
+      mainTl.to('.bg-1', { autoAlpha: 0, duration: 1 }, 0.2); // Fade out Ground
+      mainTl.fromTo('.bg-2', { autoAlpha: 0 }, { autoAlpha: 1, duration: 1 }, 0.2); // Fade in Skyscraper
 
-      // FLOOR 1: keep visible at first
-      tl.fromTo('.floor-1', { autoAlpha: 1 }, { autoAlpha: 1, duration: 0.5 });
+      mainTl.to('.bg-2', { autoAlpha: 0, duration: 1 }, 0.4); // Fade out Skyscraper
+      mainTl.fromTo('.bg-3', { autoAlpha: 0 }, { autoAlpha: 1, duration: 1 }, 0.4); // Fade in Plane
 
-      // Fade floor-1 out, floor-2 in
-      tl.to('.floor-1', { autoAlpha: 0, duration: 1 });
-      tl.fromTo('.floor-2', { autoAlpha: 0 }, { autoAlpha: 1, duration: 1 });
+      mainTl.to('.bg-3', { autoAlpha: 0, duration: 1 }, 0.6); // Fade out Plane
+      mainTl.fromTo('.bg-4', { autoAlpha: 0 }, { autoAlpha: 1, duration: 1 }, 0.6); // Fade in Near Space
 
-      // Fade floor-2 out, floor-3 in
-      tl.to('.floor-2', { autoAlpha: 0, duration: 1 });
-      tl.fromTo('.floor-3', { autoAlpha: 0 }, { autoAlpha: 1, duration: 1 });
+      mainTl.to('.bg-4', { autoAlpha: 0, duration: 1 }, 0.8); // Fade out Near Space
+      mainTl.fromTo('.bg-5', { autoAlpha: 0 }, { autoAlpha: 1, duration: 1 }, 0.8); // Fade in Outer Space
 
-      // Fade floor-3 out, floor-4 in
-      tl.to('.floor-3', { autoAlpha: 0, duration: 1 });
-      tl.fromTo('.floor-4', { autoAlpha: 0 }, { autoAlpha: 1, duration: 1 });
+      // Text transitions (ensure no overlap)
+      mainTl.fromTo('.floorText-1', { autoAlpha: 1 }, { autoAlpha: 1, duration: 0.1 }, 0); // Keep text 1 visible
+      mainTl.to('.floorText-1', { autoAlpha: 0, duration: 0.5 }, 0.18); // Start fading out text 1 slightly before 0.2
+      mainTl.fromTo('.floorText-2', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.5 }, 0.22); // Fade in text 2 after text 1 fades out
 
-      // Fade floor-4 out, floor-5 in
-      tl.to('.floor-4', { autoAlpha: 0, duration: 1 });
-      tl.fromTo('.floor-5', { autoAlpha: 0 }, { autoAlpha: 1, duration: 1 });
+      mainTl.to('.floorText-2', { autoAlpha: 0, duration: 0.5 }, 0.38);
+      mainTl.fromTo('.floorText-3', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.5 }, 0.42);
+
+      mainTl.to('.floorText-3', { autoAlpha: 0, duration: 0.5 }, 0.58);
+      mainTl.fromTo('.floorText-4', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.5 }, 0.62);
+
+      mainTl.to('.floorText-4', { autoAlpha: 0, duration: 0.5 }, 0.78);
+      mainTl.fromTo('.floorText-5', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.5 }, 0.82);
     }, containerRef);
 
     return () => ctx.revert();
   }, []);
 
   return (
-    <section
-      ref={containerRef}
-      className="relative w-full min-h-screen overflow-hidden text-white bg-black"
-    >
-      {/* Optional: If you want a global background fade or starfield, place it here. */}
-      {/* <img
-        src="/images/starfield.jpg"
-        alt="Starfield"
-        className="absolute inset-0 w-full h-full object-cover"
-      /> */}
-
-      {/* 
-        We'll place all floors as absolute overlays (same size, same position).
-        We'll let GSAP fade them in/out in sequence.
-      */}
+    <section ref={containerRef} className="relative w-full min-h-screen overflow-hidden bg-black text-white">
+      {/* Background images */}
       <div className="absolute inset-0">
-        {/* ====== FLOOR 1: Preparatory Classes Year 1 ====== */}
-        <div
-          className="
-            floor-1
-            absolute inset-0
-            flex flex-col items-center justify-center text-center
-            px-4
-            transition-opacity
-          "
-          style={{
-            // Example background or inline style
-            backgroundImage: 'url("/images/ground.jpg")',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        >
+        <img
+          src="/images/ground.jpg"
+          alt="Ground"
+          className="bg-1 absolute inset-0 w-full h-full object-cover"
+          style={{ opacity: 1 }}
+        />
+        <img
+          src="/images/skyscraper.jpg"
+          alt="Skyscraper"
+          className="bg-2 absolute inset-0 w-full h-full object-cover"
+          style={{ opacity: 0 }}
+        />
+        <img
+          src="/images/plane.jpg"
+          alt="Plane"
+          className="bg-3 absolute inset-0 w-full h-full object-cover"
+          style={{ opacity: 0 }}
+        />
+        <img
+          src="/images/nearspace.jpg"
+          alt="Near Space"
+          className="bg-4 absolute inset-0 w-full h-full object-cover"
+          style={{ opacity: 0 }}
+        />
+        <img
+          src="/images/outerspace.jpg"
+          alt="Outer Space"
+          className="bg-5 absolute inset-0 w-full h-full object-cover"
+          style={{ opacity: 0 }}
+        />
+      </div>
+
+      {/* Text containers */}
+      <div className="absolute inset-0 flex items-center justify-center px-4">
+        <div className="floorText-1 max-w-lg text-center">
           <h2 className="text-4xl font-bold mb-4">Preparatory Classes – Year 1</h2>
-          <p className="text-lg max-w-lg mb-4">
-            <strong>2020–2021</strong> at IPEST, Tunis <br />
+          <p className="text-lg mb-4">
+            <strong>2020–2021</strong> at IPEST, Tunis
+            <br />
             Foundations in Mathematics &amp; Physics
           </p>
-          <p className="opacity-80">You are on the <strong>Ground Level</strong>.</p>
+          <p>You are on the <strong>Ground Level</strong>.</p>
         </div>
 
-        {/* ====== FLOOR 2: Preparatory Classes Year 2 ====== */}
-        <div
-          className="
-            floor-2
-            absolute inset-0
-            flex flex-col items-center justify-center text-center
-            px-4
-            transition-opacity
-          "
-          style={{
-            // Example background or inline style
-            backgroundImage: 'url("/images/skyscraper.jpg")',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            opacity: 0, // Start hidden
-          }}
-        >
+        <div className="floorText-2 max-w-lg text-center absolute" style={{ opacity: 0 }}>
           <h2 className="text-4xl font-bold mb-4">Preparatory Classes – Year 2</h2>
-          <p className="text-lg max-w-lg mb-4">
-            <strong>2021–2022</strong> at IPEST, Tunis <br />
+          <p className="text-lg mb-4">
+            <strong>2021–2022</strong> at IPEST, Tunis
+            <br />
             Passed CCMP, Centrale-Supélec, CCINP, and national exams
           </p>
-          <p className="opacity-80">We’ve reached the <strong>Skyscraper Level</strong>.</p>
+          <p>We’ve reached the <strong>Skyscraper Level</strong>.</p>
         </div>
 
-        {/* ====== FLOOR 3: Engineering Year 1 ====== */}
-        <div
-          className="
-            floor-3
-            absolute inset-0
-            flex flex-col items-center justify-center text-center
-            px-4
-            transition-opacity
-          "
-          style={{
-            backgroundImage: 'url("/images/plane.jpg")',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            opacity: 0,
-          }}
-        >
+        <div className="floorText-3 max-w-lg text-center absolute" style={{ opacity: 0 }}>
           <h2 className="text-4xl font-bold mb-4">Engineering – 1st Year</h2>
-          <p className="text-lg max-w-lg mb-4">
-            <strong>2022–2023</strong> at IMT Atlantique <br />
+          <p className="text-lg mb-4">
+            <strong>2022–2023</strong> at IMT Atlantique
+            <br />
             Probability, Statistics, Signal Processing, Physics, Programming...
           </p>
-          <p className="opacity-80">
-            We are now at the <strong>Commercial Plane Level</strong>.
-          </p>
+          <p>We are now at the <strong>Commercial Plane Level</strong>.</p>
         </div>
 
-        {/* ====== FLOOR 4: Engineering Year 2 ====== */}
-        <div
-          className="
-            floor-4
-            absolute inset-0
-            flex flex-col items-center justify-center text-center
-            px-4
-            transition-opacity
-          "
-          style={{
-            backgroundImage: 'url("/images/nearspace.jpg")',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            opacity: 0,
-          }}
-        >
+        <div className="floorText-4 max-w-lg text-center absolute" style={{ opacity: 0 }}>
           <h2 className="text-4xl font-bold mb-4">Engineering – 2nd Year</h2>
-          <p className="text-lg max-w-lg mb-4">
-            <strong>2023–2024</strong> (Software Development Specialization)
+          <p className="text-lg mb-4">
+            <strong>2023–2024</strong> (Software Dev Specialization)
             <br />
             OOP, Functional Paradigm, Design Patterns, Cryptography, Microservices...
           </p>
-          <p className="opacity-80">Welcome to <strong>Near Space Orbit</strong>.</p>
+          <p>Welcome to <strong>Near Space Orbit</strong>.</p>
         </div>
 
-        {/* ====== FLOOR 5: Engineering Year 3 ====== */}
-        <div
-          className="
-            floor-5
-            absolute inset-0
-            flex flex-col items-center justify-center text-center
-            px-4
-            transition-opacity
-          "
-          style={{
-            backgroundImage: 'url("/images/outerspace.jpg")',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            opacity: 0,
-          }}
-        >
+        <div className="floorText-5 max-w-lg text-center absolute" style={{ opacity: 0 }}>
           <h2 className="text-4xl font-bold mb-4">Engineering – 3rd Year</h2>
-          <p className="text-lg max-w-lg mb-4">
-            <strong>2024–2025</strong> (Software Dev. Continuation)
+          <p className="text-lg mb-4">
+            <strong>2024–2025</strong> (Software Dev Continuation)
             <br />
             Advanced topics, specialized projects, final internships
           </p>
-          <p className="opacity-80">We’ve reached <strong>Deep Space</strong>!</p>
+          <p>We’ve reached <strong>Deep Space</strong>!</p>
         </div>
       </div>
     </section>
