@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
 import { Globe } from 'lucide-react';
+import { Analytics } from "@vercel/analytics/react"
 
 // Import sections
 import Home from './components/sections/Home';
@@ -93,6 +94,7 @@ const App = () => {
           </Routes>
         </main>
       </div>
+      <Analytics />
     </Router>
   );
 };
