@@ -4,9 +4,9 @@ export default function Home() {
   return (
     <section
       id="home"
-      className="relative w-full min-h-screen bg-black text-white flex items-center justify-center"
+      className="relative w-full min-h-screen bg-transparent text-white flex items-center justify-center"
       style={{
-        backgroundImage: "url('/images/stars-bg.jpg')", // Make sure you have a stars-bg.jpg (or any space image) in /public
+        backgroundImage: "url('/images/stars-bg.jpg')", 
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundAttachment: 'fixed',
@@ -29,7 +29,7 @@ export default function Home() {
           {/* Example Button or CTA */}
           <div>
             <a
-              href="#contact"
+              href="contact"
               className="inline-block bg-purple-600 hover:bg-purple-700 transition-colors px-6 py-3 rounded-full text-white font-semibold"
             >
               Get in Touch

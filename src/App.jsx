@@ -48,7 +48,7 @@ const App = () => {
         />
 
         {/* Header */}
-        <header className="fixed w-full z-50">
+        <header className="fixed w-full z-50 bg-transparent backdrop-blur-lg">
           <nav className="max-w-6xl mx-auto px-6 py-6">
             <div className="flex items-center justify-between backdrop-blur-lg bg-black/20 rounded-2xl px-6 py-4 border border-white/10">
               <h1 className="text-2xl font-bold">
@@ -56,19 +56,19 @@ const App = () => {
               </h1>
 
               <div className="flex items-center gap-8">
-                <ul className="hidden md:flex gap-8">
-                  {navItems[language].map((item, index) => (
-                    <li key={index}>
-                      <Link
-                        to={`/${item.toLowerCase()}`}
-                        className="relative group text-white hover:text-white transition-colors"
-                      >
-                        {item}
-                        <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-purple-500 transition-all group-hover:w-full" />
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
+              <ul className="hidden md:flex gap-8">
+                {navItems[language].map((item, index) => (
+                  <li key={index}>
+                    <Link
+                      to={item === 'Home' || item === 'Accueil' ? '/' : `/${item.toLowerCase()}`}
+                      className="relative group text-white hover:text-white transition-colors"
+                    >
+                      {item}
+                      <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-purple-500 transition-all group-hover:w-full" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
 
                 <button
                   onClick={toggleLanguage}
@@ -83,7 +83,7 @@ const App = () => {
         </header>
 
         {/* Main Content */}
-        <main className="relative pt-32 max-w-6xl mx-auto px-6">
+        <main className="relative pt-32 w-full min-h-screen">
           <Routes>
             <Route path="/" element={<Home language={language} />} />
             <Route path="/projects" element={<Projects language={language} />} />
