@@ -4,18 +4,19 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 
-// Import the black hole background
-import BlackHoleShader from '../shaders/BlackHoleShader';
+// Import both Black Hole versions
+import BlackHoleShader from '../shaders/BlackHoleShader'; // Heavy version
+import LightweightBlackHole from '../shaders/LightweightBlackHole'; // New lightweight version
 
 // Import experience data
 import experienceData from '../../data/experienceData';
 
 // ------------------- StarOrbit (experience spheres) -------------------
 const StarOrbit = memo(({ experience, onHover }) => {
-  const { orbitRadius, color, role, company, duration, description } = experience;
+  const { orbitRadius, color, role, company, duration } = experience;
   const orbitRef = useRef();
   const [hovered, setHovered] = useState(false);
-  const orbitSpeed = 0.1; // Reduced speed for efficiency
+  const orbitSpeed = 0.05; // Even lower speed for performance efficiency
 
   // Animate the star orbit (around a fixed center)
   useFrame((_, delta) => {
@@ -67,12 +68,13 @@ const StarOrbit = memo(({ experience, onHover }) => {
 // ------------------- Experience Page -------------------
 export default function Experience() {
   const [activeExperience, setActiveExperience] = useState(null);
+  const [heavyMode, setHeavyMode] = useState(false); // Toggles between light/heavy version
 
   return (
     <div className="w-full h-screen text-white relative">
       <Canvas camera={{ position: [0, 0, 25], fov: 45 }}>
-        {/* Render Black Hole as a Static Background */}
-        <BlackHoleShader />
+        {/* Toggle between lightweight & heavy black hole */}
+        {heavyMode ? <BlackHoleShader /> : <LightweightBlackHole />}
 
         {/* Basic Lighting */}
         <ambientLight intensity={0.2} />
@@ -83,6 +85,14 @@ export default function Experience() {
           <StarOrbit key={exp.id} experience={exp} onHover={setActiveExperience} />
         ))}
       </Canvas>
+
+      {/* Toggle Button for Heavy Mode */}
+      <button
+        className="absolute top-5 right-5 bg-gray-800 text-white px-4 py-2 rounded-md shadow-lg hover:bg-gray-700 transition-all"
+        onClick={() => setHeavyMode(!heavyMode)}
+      >
+        {heavyMode ? 'Switch to Lightweight Mode' : 'Switch to Heavy Mode'}
+      </button>
 
       {/* Hovered Experience Details Overlay */}
       {activeExperience && (
