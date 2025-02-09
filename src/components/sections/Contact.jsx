@@ -6,41 +6,86 @@ import * as THREE from 'three';
 import emailjs from '@emailjs/browser';
 
 // ----- Hologram Subcomponent -----
-// This is the 3D plane that displays the logo. It smoothly appears/disappears when hovered.
+// Replaces the old Hologram. Now we have:
+// 1) A "flickerPlane" behind the logo (slightly bigger, flickers light blue).
+// 2) The main logo plane in front, fully visible (fades in/out on hover).
 function Hologram({ hovered, logoTexture }) {
-  const planeRef = useRef(null);
+  const groupRef = React.useRef(null);
+  const logoRef = React.useRef(null);
+  const flickerRef = React.useRef(null);
 
   // We'll keep local refs for scale and opacity to animate them smoothly in useFrame
-  const scale = useRef(0);
-  const opacity = useRef(0);
+  const scale = React.useRef(0);
+  const opacity = React.useRef(0);
 
   useFrame(() => {
-    // If hovered, target scale = 1, else 0
+    // If hovered, target scale = 1; else 0
     const targetScale = hovered ? 1 : 0;
     scale.current = THREE.MathUtils.lerp(scale.current, targetScale, 0.1);
 
-    // If hovered, target opacity = 0.9, else 0
+    // If hovered, target opacity = ~0.9; else 0
     const targetOpacity = hovered ? 0.9 : 0;
     opacity.current = THREE.MathUtils.lerp(opacity.current, targetOpacity, 0.1);
 
-    if (planeRef.current) {
-      planeRef.current.scale.set(scale.current, scale.current, 1);
-      planeRef.current.material.opacity = opacity.current;
+    // Update main logo plane
+    if (logoRef.current) {
+      // Fade scale & opacity in/out
+      logoRef.current.scale.set(scale.current, scale.current, 1);
+      logoRef.current.material.opacity = opacity.current;
+    }
+
+    // Update flicker plane behind the logo
+    if (flickerRef.current) {
+      // Match the scale of the main logo so they appear/disappear together
+      flickerRef.current.scale.set(scale.current, scale.current, 1);
+
+      if (hovered) {
+        // Random flicker factor in a small range
+        const flicker = 0.2 + Math.random() * 0.1;
+        // Multiply by overall opacity so it fades in/out with the logo
+        flickerRef.current.material.opacity = flicker * opacity.current;
+        // Adjust emissive intensity to flicker the glow
+        flickerRef.current.material.emissiveIntensity = flicker * 1.5;
+      } else {
+        flickerRef.current.material.opacity = 0;
+      }
     }
   });
 
   return (
-    <mesh ref={planeRef} position={[0, 1.5, 0]}>
-      <planeGeometry args={[1.2, 1.2]} />
-      <meshBasicMaterial
-        map={logoTexture}
-        transparent
-        opacity={0}
-        color="#ffffff"
-      />
-    </mesh>
+    <group ref={groupRef} position={[0, 1.5, 0]}>
+      {/* Flickering plane behind the logo (slightly bigger) */}
+      <mesh
+        ref={flickerRef}
+        position={[0, 0, -0.01]} // Slightly behind the logo plane
+        rotation={[0, 0, 0]}    // You can tilt this if you like (e.g., [Math.PI / 12, 0, 0])
+      >
+        <planeGeometry args={[1.4, 1.4]} />
+        <meshStandardMaterial
+          color="#00bbff"
+          emissive="#00bbff"
+          transparent
+          opacity={0}
+          roughness={0.3}
+          metalness={0.2}
+        />
+      </mesh>
+
+      {/* Main logo plane (fully visible, no flicker) */}
+      <mesh ref={logoRef}>
+        <planeGeometry args={[1.2, 1.2]} />
+        <meshBasicMaterial
+          map={logoTexture}
+          transparent
+          opacity={0}
+          color="#ffffff"
+        />
+      </mesh>
+    </group>
   );
 }
+
+
 
 // ----- Voyager 1 (Email) -----
 function VoyagerOne({ position, isHovered, setHovered, onClick }) {

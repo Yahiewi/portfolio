@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Link, useLocation } from 'react-router-dom';
 import { Globe } from 'lucide-react';
-import { Analytics } from "@vercel/analytics/react"
+import { Analytics } from "@vercel/analytics/react";
 
 // Import sections
 import Home from './components/sections/Home';
@@ -10,6 +10,25 @@ import Skills from './components/sections/Skills';
 import Education from './components/sections/Education';
 import Experience from './components/sections/Experience';
 import Contact from './components/sections/Contact';
+
+const DynamicTitle = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    const pageTitles = {
+      "/": "Yahia Heni",
+      "/projects": "Yahia Heni - Projects",
+      "/skills": "Yahia Heni - Skills",
+      "/education": "Yahia Heni - Education",
+      "/experience": "Yahia Heni - Experience",
+      "/contact": "Yahia Heni - Contact"
+    };
+
+    document.title = pageTitles[location.pathname] || "Yahia Heni";
+  }, [location]);
+
+  return null;
+};
 
 const App = () => {
   const [language, setLanguage] = useState('en');
@@ -38,6 +57,7 @@ const App = () => {
 
   return (
     <Router>
+      <DynamicTitle />
       <div className="min-h-screen bg-black text-white overflow-hidden">
         {/* Interactive Background */}
         <div
@@ -56,19 +76,19 @@ const App = () => {
               </h1>
 
               <div className="flex items-center gap-8">
-              <ul className="hidden md:flex gap-8">
-                {navItems[language].map((item, index) => (
-                  <li key={index}>
-                    <Link
-                      to={item === 'Home' || item === 'Accueil' ? '/' : `/${item.toLowerCase()}`}
-                      className="relative group text-white hover:text-white transition-colors"
-                    >
-                      {item}
-                      <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-purple-500 transition-all group-hover:w-full" />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+                <ul className="hidden md:flex gap-8">
+                  {navItems[language].map((item, index) => (
+                    <li key={index}>
+                      <Link
+                        to={item === 'Home' || item === 'Accueil' ? '/' : `/${item.toLowerCase()}`}
+                        className="relative group text-white hover:text-white transition-colors"
+                      >
+                        {item}
+                        <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-purple-500 transition-all group-hover:w-full" />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
 
                 <button
                   onClick={toggleLanguage}
