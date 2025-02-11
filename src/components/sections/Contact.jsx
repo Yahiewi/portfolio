@@ -5,69 +5,54 @@ import { OrbitControls, Stars, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import emailjs from '@emailjs/browser';
 
-// ----- Hologram Subcomponent -----
-// Replaces the old Hologram. Now we have:
-// 1) A "flickerPlane" behind the logo (slightly bigger, flickers light blue).
-// 2) The main logo plane in front, fully visible (fades in/out on hover).
+// --------------------------------------------------
+// 1) Hologram Subcomponent
+// --------------------------------------------------
 function Hologram({ hovered, logoTexture }) {
   const groupRef = React.useRef(null);
   const logoRef = React.useRef(null);
-  const flickerRef = React.useRef(null);
+  const auraRef = React.useRef(null);
 
-  // We'll keep local refs for scale and opacity to animate them smoothly in useFrame
+  // We'll keep refs for scale and opacity to animate them in useFrame
   const scale = React.useRef(0);
   const opacity = React.useRef(0);
 
   useFrame(() => {
-    // If hovered, target scale = 1; else 0
+    // Smoothly transition scale from 0 to 1 on hover
     const targetScale = hovered ? 1 : 0;
     scale.current = THREE.MathUtils.lerp(scale.current, targetScale, 0.1);
 
-    // If hovered, target opacity = ~0.9; else 0
+    // Smoothly transition opacity from 0 to ~0.9 on hover
     const targetOpacity = hovered ? 0.9 : 0;
     opacity.current = THREE.MathUtils.lerp(opacity.current, targetOpacity, 0.1);
 
     // Update main logo plane
     if (logoRef.current) {
-      // Fade scale & opacity in/out
       logoRef.current.scale.set(scale.current, scale.current, 1);
       logoRef.current.material.opacity = opacity.current;
     }
 
-    // Update flicker plane behind the logo
-    if (flickerRef.current) {
-      // Match the scale of the main logo so they appear/disappear together
-      flickerRef.current.scale.set(scale.current, scale.current, 1);
-
-      if (hovered) {
-        // Random flicker factor in a small range
-        const flicker = 0.2 + Math.random() * 0.1;
-        // Multiply by overall opacity so it fades in/out with the logo
-        flickerRef.current.material.opacity = flicker * opacity.current;
-        // Adjust emissive intensity to flicker the glow
-        flickerRef.current.material.emissiveIntensity = flicker * 1.5;
-      } else {
-        flickerRef.current.material.opacity = 0;
-      }
+    // Update hologram aura plane behind the logo
+    if (auraRef.current) {
+      // Match the main logo's scale for a synchronized fade in/out
+      auraRef.current.scale.set(scale.current, scale.current, 1);
+      // Slightly lower opacity so the aura is more subtle
+      auraRef.current.material.opacity = 0.4 * opacity.current;
     }
   });
 
   return (
     <group ref={groupRef} position={[0, 1.5, 0]}>
-      {/* Flickering plane behind the logo (slightly bigger) */}
-      <mesh
-        ref={flickerRef}
-        position={[0, 0, -0.01]} // Slightly behind the logo plane
-        rotation={[0, 0, 0]}    // You can tilt this if you like (e.g., [Math.PI / 12, 0, 0])
-      >
+      {/* Hologram aura plane (slightly bigger, subtle color) */}
+      <mesh ref={auraRef} position={[0, 0, -0.01]}>
         <planeGeometry args={[1.4, 1.4]} />
         <meshStandardMaterial
           color="#00bbff"
           emissive="#00bbff"
+          emissiveIntensity={0.2}
           transparent
           opacity={0}
-          roughness={0.3}
-          metalness={0.2}
+          side={THREE.DoubleSide} // visible from both sides
         />
       </mesh>
 
@@ -79,26 +64,58 @@ function Hologram({ hovered, logoTexture }) {
           transparent
           opacity={0}
           color="#ffffff"
+          side={THREE.DoubleSide} // visible from both sides
         />
       </mesh>
     </group>
   );
 }
 
-
-
-// ----- Voyager 1 (Email) -----
-function VoyagerOne({ position, isHovered, setHovered, onClick }) {
-  // Load your mail logo image (replace path as needed)
-  const mailLogo = useTexture('/images/mail.png');
+// --------------------------------------------------
+// 2) A Reusable VoyagerBase Component
+//    - Contains the body, dish, antenna, ring, and
+//      rotation/bobbing logic
+//    - Accepts props to customize each "Voyager"
+// --------------------------------------------------
+function VoyagerBase({
+  position,
+  isHovered,
+  probeID,
+  setHovered,
+  onClick,
+  // Visual customizations
+  bodyColor,
+  dishEmissive,
+  ringColor,
+  ringEmissive,
+  ringEmissiveIntensity = 0.2,
+  // Rotation customizations
+  minAngle,
+  maxAngle,
+  rotationSpeed,
+  // Hologram texture
+  logoTexture
+}) {
   const groupRef = useRef();
 
-  // Drifting animation
+  // We'll store the current rotation direction in a ref so it persists
+  const directionRef = useRef(1);
+
   useFrame((state, delta) => {
     if (groupRef.current) {
-      // Slow rotation
-      groupRef.current.rotation.y += delta * 0.1;
-      // Bobbing up/down
+      // 1) Rotation
+      groupRef.current.rotation.y += directionRef.current * rotationSpeed * delta;
+
+      // 2) Check limits
+      if (groupRef.current.rotation.y > maxAngle) {
+        groupRef.current.rotation.y = maxAngle;
+        directionRef.current = -1; // flip direction
+      } else if (groupRef.current.rotation.y < minAngle) {
+        groupRef.current.rotation.y = minAngle;
+        directionRef.current = 1; // flip direction
+      }
+
+      // 3) Bobbing
       groupRef.current.position.y =
         position[1] + Math.sin(state.clock.elapsedTime) * 0.4;
     }
@@ -109,162 +126,123 @@ function VoyagerOne({ position, isHovered, setHovered, onClick }) {
       ref={groupRef}
       position={position}
       // Hover events
-      onPointerOver={() => setHovered('voyager1')}
-      onPointerOut={() => setHovered(null)}
+      onPointerOver={(e) => {
+        setHovered(probeID);
+        document.body.style.cursor = 'pointer';
+      }}
+      onPointerOut={(e) => {
+        setHovered(null);
+        document.body.style.cursor = 'auto';
+      }}
       onClick={onClick}
     >
-      {/* Body of the probe (simple box) */}
+      {/* Body */}
       <mesh>
         <boxGeometry args={[1, 0.2, 1]} />
-        <meshStandardMaterial color="#bbbbbb" />
+        <meshStandardMaterial color={bodyColor} />
       </mesh>
 
-      {/* Dish (cylindrical + scaled) */}
+      {/* Dish */}
       <mesh position={[0, 0.2, 0]}>
         <cylinderGeometry args={[0, 0.6, 0.05, 16]} />
-        <meshStandardMaterial emissive="#fff59d" emissiveIntensity={0.3} />
+        <meshStandardMaterial emissive={dishEmissive} emissiveIntensity={0.3} />
       </mesh>
 
-      {/* Antenna (small stick) */}
+      {/* Antenna */}
       <mesh position={[0, -0.2, 0]}>
         <cylinderGeometry args={[0.02, 0.02, 0.4, 8]} />
         <meshStandardMaterial color="#888" />
       </mesh>
 
-      {/* Outer ring for style */}
+      {/* Outer ring */}
       <mesh rotation-x={Math.PI / 2} position={[0, 0.21, 0]}>
         <ringGeometry args={[0.62, 0.65, 32]} />
         <meshStandardMaterial
-          color="#fff9c4"
-          emissive="#fff9c4"
-          emissiveIntensity={0.2}
+          color={ringColor}
+          emissive={ringEmissive}
+          emissiveIntensity={ringEmissiveIntensity}
         />
       </mesh>
 
       {/* Hologram logo */}
-      <Hologram hovered={isHovered === 'voyager1'} logoTexture={mailLogo} />
+      <Hologram hovered={isHovered === probeID} logoTexture={logoTexture} />
     </group>
   );
 }
 
-// ----- Voyager 2 (LinkedIn) -----
+// --------------------------------------------------
+// 3) VoyagerOne, VoyagerTwo, VoyagerThree
+//    - Thin wrappers that pass unique props to VoyagerBase
+// --------------------------------------------------
+function VoyagerOne({ position, isHovered, setHovered, onClick }) {
+  const mailLogo = useTexture('/images/mail.png');
+  return (
+    <VoyagerBase
+      position={position}
+      isHovered={isHovered}
+      probeID="voyager1"
+      setHovered={setHovered}
+      onClick={onClick}
+      bodyColor="#bbbbbb"
+      dishEmissive="#fff59d"
+      ringColor="#fff9c4"
+      ringEmissive="#fff9c4"
+      ringEmissiveIntensity={0.2}
+      minAngle={-0.6}
+      maxAngle={0.6}
+      rotationSpeed={0.4}
+      logoTexture={mailLogo}
+    />
+  );
+}
+
 function VoyagerTwo({ position, isHovered, setHovered, onClick }) {
-  // Load your LinkedIn logo image (replace path as needed)
   const linkedinLogo = useTexture('/images/linkedin.png');
-  const groupRef = useRef();
-
-  // Drifting animation
-  useFrame((state, delta) => {
-    if (groupRef.current) {
-      // Slow rotation (opposite direction for variation)
-      groupRef.current.rotation.y -= delta * 0.1;
-      // Bobbing up/down
-      groupRef.current.position.y =
-        position[1] + Math.cos(state.clock.elapsedTime) * 0.4;
-    }
-  });
-
   return (
-    <group
-      ref={groupRef}
+    <VoyagerBase
       position={position}
-      // Hover events
-      onPointerOver={() => setHovered('voyager2')}
-      onPointerOut={() => setHovered(null)}
+      isHovered={isHovered}
+      probeID="voyager2"
+      setHovered={setHovered}
       onClick={onClick}
-    >
-      {/* Body */}
-      <mesh>
-        <boxGeometry args={[1, 0.2, 1]} />
-        <meshStandardMaterial color="#aabbee" />
-      </mesh>
-
-      {/* Dish */}
-      <mesh position={[0, 0.2, 0]}>
-        <cylinderGeometry args={[0, 0.6, 0.05, 16]} />
-        <meshStandardMaterial emissive="#bbdefb" emissiveIntensity={0.3} />
-      </mesh>
-
-      {/* Antenna */}
-      <mesh position={[0, -0.2, 0]}>
-        <cylinderGeometry args={[0.02, 0.02, 0.4, 8]} />
-        <meshStandardMaterial color="#888" />
-      </mesh>
-
-      {/* Outer ring */}
-      <mesh rotation-x={Math.PI / 2} position={[0, 0.21, 0]}>
-        <ringGeometry args={[0.62, 0.65, 32]} />
-        <meshStandardMaterial
-          color="#dbefff"
-          emissive="#dbefff"
-          emissiveIntensity={0.2}
-        />
-      </mesh>
-
-      {/* Hologram logo */}
-      <Hologram hovered={isHovered === 'voyager2'} logoTexture={linkedinLogo} />
-    </group>
+      bodyColor="#aabbee"
+      dishEmissive="#bbdefb"
+      ringColor="#dbefff"
+      ringEmissive="#dbefff"
+      ringEmissiveIntensity={0.2}
+      minAngle={-0.4}
+      maxAngle={0.4}
+      rotationSpeed={0.3}
+      logoTexture={linkedinLogo}
+    />
   );
 }
 
-// ----- Voyager 3 (GitHub) -----
 function VoyagerThree({ position, isHovered, setHovered, onClick }) {
-  // Load your GitHub logo image (replace path as needed)
   const githubLogo = useTexture('/images/github.png');
-  const groupRef = useRef();
-
-  // Drifting animation
-  useFrame((state, delta) => {
-    if (groupRef.current) {
-      groupRef.current.rotation.y += delta * 0.12;
-      groupRef.current.position.y =
-        position[1] + Math.sin(state.clock.elapsedTime + 2) * 0.4;
-    }
-  });
-
   return (
-    <group
-      ref={groupRef}
+    <VoyagerBase
       position={position}
-      onPointerOver={() => setHovered('voyager3')}
-      onPointerOut={() => setHovered(null)}
+      isHovered={isHovered}
+      probeID="voyager3"
+      setHovered={setHovered}
       onClick={onClick}
-    >
-      {/* Body */}
-      <mesh>
-        <boxGeometry args={[1, 0.2, 1]} />
-        <meshStandardMaterial color="#cccccc" />
-      </mesh>
-
-      {/* Dish */}
-      <mesh position={[0, 0.2, 0]}>
-        <cylinderGeometry args={[0, 0.6, 0.05, 16]} />
-        <meshStandardMaterial emissive="#ccc" emissiveIntensity={0.3} />
-      </mesh>
-
-      {/* Antenna */}
-      <mesh position={[0, -0.2, 0]}>
-        <cylinderGeometry args={[0.02, 0.02, 0.4, 8]} />
-        <meshStandardMaterial color="#888" />
-      </mesh>
-
-      {/* Outer ring */}
-      <mesh rotation-x={Math.PI / 2} position={[0, 0.21, 0]}>
-        <ringGeometry args={[0.62, 0.65, 32]} />
-        <meshStandardMaterial
-          color="#ccc"
-          emissive="#ccc"
-          emissiveIntensity={0.2}
-        />
-      </mesh>
-
-      {/* Hologram logo */}
-      <Hologram hovered={isHovered === 'voyager3'} logoTexture={githubLogo} />
-    </group>
+      bodyColor="#cccccc"
+      dishEmissive="#ccc"
+      ringColor="#ccc"
+      ringEmissive="#ccc"
+      ringEmissiveIntensity={0.2}
+      minAngle={-0.3}
+      maxAngle={0.25}
+      rotationSpeed={0.3}
+      logoTexture={githubLogo}
+    />
   );
 }
 
-// ----- Email Modal (sends via EmailJS) -----
+// --------------------------------------------------
+// 4) EmailFormModal
+// --------------------------------------------------
 function EmailFormModal({ onClose }) {
   const formRef = useRef(null);
   const [sending, setSending] = useState(false);
@@ -309,8 +287,7 @@ function EmailFormModal({ onClose }) {
           <div className="flex flex-col items-center">
             <h2 className="text-2xl font-semibold mb-4">Message Sent!</h2>
             <p className="mb-4">
-              Thank you for reaching out. I’ll get back to you as soon as
-              possible.
+              Thank you for reaching out. I’ll get back to you as soon as possible.
             </p>
             <button
               onClick={onClose}
@@ -323,7 +300,6 @@ function EmailFormModal({ onClose }) {
           <>
             <h2 className="text-2xl font-semibold mb-4">Send me an Email</h2>
             <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-4">
-              {/* The "to_email" or "to_name" can be set in your EmailJS template settings */}
               <label className="flex flex-col">
                 <span className="font-medium">Your Name</span>
                 <input
@@ -366,10 +342,11 @@ function EmailFormModal({ onClose }) {
   );
 }
 
-// ----- Main Contact Component -----
+// --------------------------------------------------
+// 5) Main Contact Component
+// --------------------------------------------------
 export default function Contact() {
-  // Track which probe (if any) is hovered
-  // Can be 'voyager1', 'voyager2', 'voyager3', or null
+  // Track which probe (if any) is hovered: 'voyager1', 'voyager2', 'voyager3', or null
   const [hovered, setHovered] = useState(null);
 
   // Email modal
@@ -395,7 +372,6 @@ export default function Contact() {
     <div className="relative w-full h-screen" id="contact">
       {/* 3D Scene */}
       <Canvas camera={{ position: [0, 0, 10], fov: 60 }}>
-        {/* OrbitControls if you want user to move the scene */}
         <OrbitControls
           enablePan={false}
           enableZoom={false}
