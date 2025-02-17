@@ -1,4 +1,5 @@
-const experienceData = [
+const experienceData = {
+  en: [
     {
       id: 1,
       role: 'Research Intern - Computer Vision',
@@ -17,8 +18,8 @@ const experienceData = [
         'Parallel Computing',
         'Convolutional Neural Networks (CNN)',
       ],
-      orbitRadius: 10, // Distance of the star from the black hole
-      color: '#ff8000', // Star color
+      orbitRadius: 10,
+      color: '#ff8000',
     },
     {
       id: 2,
@@ -36,7 +37,46 @@ const experienceData = [
       orbitRadius: 13,
       color: '#00ffff',
     },
-  ];
-  
-  export default experienceData;
-  
+  ],
+  fr: [
+    {
+      id: 1,
+      role: 'Stagiaire en recherche - Vision par ordinateur',
+      company: 'LEGOS (Laboratoire d\'Etudes en Géophysique et Océanographie Spatiales)',
+      type: 'Stage',
+      duration: 'Avr 2024 - Août 2024 · 5 mois',
+      location: 'Toulouse, Occitanie, France · Sur site',
+      description: [
+        "Développement d'algorithmes utilisant la technique de l'Optical Flow pour estimer la vitesse des sargasses dans l'Atlantique.",
+        "Utilisation de réseaux neuronaux et de modèles d'IA pour l'analyse des données, améliorant la précision des prédictions.",
+        "Mise en œuvre d'algorithmes de calcul parallèle pour traiter efficacement de grands ensembles de données.",
+      ],
+      skills: [
+        'Vision par ordinateur',
+        'Développement logiciel',
+        'Calcul parallèle',
+        'Réseaux de neurones convolutionnels (CNN)',
+      ],
+      orbitRadius: 10,
+      color: '#ff8000',
+    },
+    {
+      id: 2,
+      role: 'Technicien en télécommunications',
+      company: 'Tunisie Telecom',
+      type: 'Stage',
+      duration: 'Juin 2023 - Juil 2023 · 2 mois',
+      location: 'Tunis, Tunisie · Sur site',
+      description: [
+        "Résolution des plaintes clients et aide à l'installation de lignes téléphoniques.",
+        "Expérience pratique en télécommunications et en maintenance réseau.",
+        "Travail en étroite collaboration avec les techniciens pour résoudre les problèmes.",
+      ],
+      skills: ['Télécommunications', 'Maintenance réseau', 'Service client'],
+      orbitRadius: 13,
+      color: '#00ffff',
+    },
+  ],
+};
+
+export default experienceData;

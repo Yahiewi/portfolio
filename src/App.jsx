@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Link, useLocation } from 'react-router-dom';
 import { Globe } from 'lucide-react';
 import { Analytics } from "@vercel/analytics/react";
+import translations from './translations';
 
 // Import sections
 import Home from './components/sections/Home';
@@ -50,10 +51,10 @@ const App = () => {
     setLanguage((prev) => (prev === 'en' ? 'fr' : 'en'));
   };
 
-  const navItems = {
-    en: ['Home', 'Projects', 'Skills', 'Education', 'Experience', 'Contact'],
-    fr: ['Accueil', 'Projets', 'Compétences', 'Éducation', 'Expérience', 'Contact']
-  };
+  const navItems = translations[language].nav;
+
+  // Fixed routes (keep URLs in English)
+  const navLinks = ['/', '/projects', '/skills', '/education', '/experience', '/contact'];
 
   return (
     <Router>
@@ -77,10 +78,10 @@ const App = () => {
 
               <div className="flex items-center gap-8">
                 <ul className="hidden md:flex gap-8">
-                  {navItems[language].map((item, index) => (
+                  {navItems.map((item, index) => (
                     <li key={index}>
                       <Link
-                        to={item === 'Home' || item === 'Accueil' ? '/' : `/${item.toLowerCase()}`}
+                        to={navLinks[index]} // Keep URLs in English
                         className="relative group text-white hover:text-white transition-colors"
                       >
                         {item}

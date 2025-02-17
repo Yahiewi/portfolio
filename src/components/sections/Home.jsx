@@ -1,6 +1,7 @@
+import translations from '../../translations';
 
-
-export default function Home() {
+export default function Home({ language }) {
+  const t = translations[language].home;
   return (
     <section
       id="home"
@@ -18,21 +19,17 @@ export default function Home() {
       <div className="relative z-10 max-w-4xl w-full mx-auto px-6 py-16 flex flex-col md:flex-row items-center gap-12">
         {/* Left (Text) */}
         <div className="flex-1 space-y-6">
-          <h1 className="text-4xl md:text-5xl font-bold">
-            Hi, I’m <span className="text-purple-400">Yahia</span>
-          </h1>
-          <p className="leading-relaxed text-gray-200">
-            I’m a third-year engineering student at IMT Atlantique specializing in software development,
-            seeking a 6-month final-year internship starting April or May 2025. I’m passionate about web development,
-            machine learning, game development, and just building innovative software.
-          </p>
+        <h1 className="text-4xl md:text-5xl font-bold">
+          {t.greeting} <span className="text-purple-400">Yahia</span>
+        </h1>
+        <p className="leading-relaxed text-gray-200">{t.description}</p>
           {/* Example Button or CTA */}
           <div>
             <a
               href="contact"
               className="inline-block bg-purple-600 hover:bg-purple-700 transition-colors px-6 py-3 rounded-full text-white font-semibold"
             >
-              Get in Touch
+              {t.contactButton}
             </a>
           </div>
         </div>

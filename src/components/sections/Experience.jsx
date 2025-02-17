@@ -4,9 +4,9 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 
-// Import both Black Hole versions
-import BlackHoleShader from '../shaders/BlackHoleShader'; // Heavy version
-import LightweightBlackHole from '../shaders/LightweightBlackHole'; // New lightweight version
+// Import Black Hole versions
+import BlackHoleShader from '../shaders/BlackHoleShader';
+import LightweightBlackHole from '../shaders/LightweightBlackHole';
 
 // Import experience data
 import experienceData from '../../data/experienceData';
@@ -16,9 +16,8 @@ const StarOrbit = memo(({ experience, onHover }) => {
   const { orbitRadius, color, role, company, duration } = experience;
   const orbitRef = useRef();
   const [hovered, setHovered] = useState(false);
-  const orbitSpeed = 0.05; // Even lower speed for performance efficiency
+  const orbitSpeed = 0.05;
 
-  // Animate the star orbit (around a fixed center)
   useFrame((_, delta) => {
     if (orbitRef.current) {
       orbitRef.current.rotation.y += orbitSpeed * delta;
@@ -66,9 +65,12 @@ const StarOrbit = memo(({ experience, onHover }) => {
 });
 
 // ------------------- Experience Page -------------------
-export default function Experience() {
+export default function Experience({ language }) {
   const [activeExperience, setActiveExperience] = useState(null);
-  const [heavyMode, setHeavyMode] = useState(false); // Toggles between light/heavy version
+  const [heavyMode, setHeavyMode] = useState(false);
+
+  // Get translated experience data
+  const experiences = experienceData[language];
 
   return (
     <div className="w-full h-screen text-white relative">
@@ -81,7 +83,7 @@ export default function Experience() {
         <directionalLight intensity={0.8} position={[10, 10, 5]} />
 
         {/* Orbiting Experiences */}
-        {experienceData.map((exp) => (
+        {experiences.map((exp) => (
           <StarOrbit key={exp.id} experience={exp} onHover={setActiveExperience} />
         ))}
       </Canvas>
@@ -91,7 +93,7 @@ export default function Experience() {
         className="absolute top-5 right-5 bg-gray-800 text-white px-4 py-2 rounded-md shadow-lg hover:bg-gray-700 transition-all"
         onClick={() => setHeavyMode(!heavyMode)}
       >
-        {heavyMode ? 'Switch to Lightweight Mode' : 'Switch to Heavy Mode'}
+        {heavyMode ? (language === 'en' ? 'Switch to Lightweight Mode' : 'Passer en mode léger') : (language === 'en' ? 'Switch to Heavy Mode' : 'Passer en mode avancé')}
       </button>
 
       {/* Hovered Experience Details Overlay */}
