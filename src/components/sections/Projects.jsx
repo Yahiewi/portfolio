@@ -5,6 +5,7 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Stars } from '@react-three/drei';
 import projectData from '../../data/projectData';
 import * as THREE from 'three';
+import PropTypes from 'prop-types';
 
 function Planet({ project, baseAngle, onPlanetClick }) {
   const planetRef = useRef();
@@ -25,15 +26,8 @@ function Planet({ project, baseAngle, onPlanetClick }) {
     <group>
       {/* Orbit Ring */}
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry
-          args={[project.orbitRadius - 0.02, project.orbitRadius + 0.02, 64]}
-        />
-        <meshBasicMaterial
-          color="#ffffff"
-          transparent
-          opacity={0.25}
-          side={THREE.DoubleSide}
-        />
+        <ringGeometry args={[project.orbitRadius - 0.02, project.orbitRadius + 0.02, 64]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.25} side={THREE.DoubleSide} />
       </mesh>
 
       {/* Planet Sphere */}
@@ -41,7 +35,7 @@ function Planet({ project, baseAngle, onPlanetClick }) {
         ref={planetRef}
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
-        onClick={() => onPlanetClick(project)} // click callback
+        onClick={() => onPlanetClick(project)}
       >
         <sphereGeometry args={[project.size, 32, 32]} />
         <meshStandardMaterial
@@ -54,15 +48,22 @@ function Planet({ project, baseAngle, onPlanetClick }) {
   );
 }
 
-export default function Projects() {
-  const [selectedProject, setSelectedProject] = useState(null);
+Planet.propTypes = {
+  project: PropTypes.object.isRequired,
+  baseAngle: PropTypes.number.isRequired,
+  onPlanetClick: PropTypes.func.isRequired,
+};
 
-  // Clears the selected project
+export default function Projects({ language }) {
+  const [selectedProject, setSelectedProject] = useState(null);
+  
+  // Get the correct language data
+  const projects = projectData[language];
+
   const closeOverlay = () => setSelectedProject(null);
 
   return (
     <div className="relative w-full h-screen">
-
       {/* --- Canvas with 3D Solar System --- */}
       <Canvas camera={{ position: [0, 15, 40], fov: 45 }}>
         <OrbitControls enableZoom={true} enablePan={false} maxPolarAngle={Math.PI / 2} />
@@ -79,8 +80,8 @@ export default function Projects() {
         </mesh>
 
         {/* Planets */}
-        {projectData.map((project, index) => {
-          const baseAngle = (index / projectData.length) * Math.PI * 2;
+        {projects.map((project, index) => {
+          const baseAngle = (index / projects.length) * Math.PI * 2;
           return (
             <Planet
               key={project.name}
@@ -104,10 +105,13 @@ export default function Projects() {
             </button>
             <h2 className="text-xl font-bold mb-2">{selectedProject.name}</h2>
             <p className="mb-4">{selectedProject.description}</p>
-            {/* If you have links, images, etc. you can display them here */}
           </div>
         </div>
       )}
     </div>
   );
 }
+
+Projects.propTypes = {
+  language: PropTypes.oneOf(['en', 'fr']).isRequired,
+};

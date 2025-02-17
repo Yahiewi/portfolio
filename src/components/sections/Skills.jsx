@@ -41,7 +41,6 @@ function Constellation({
   setHoveredCategory,
   setHoveredSkill,
 }) {
-  // True if this constellation is the one currently hovered
   const isHovered = hoveredCategory === category.name;
 
   // Build line segments between skill points
@@ -53,10 +52,7 @@ function Constellation({
 
   return (
     <group position={position} scale={isHovered ? 1.3 : 1}>
-      {/* 
-        Invisible bounding sphere for hover detection. Render first and ensure
-        it does not block rendering of other elements.
-      */}
+      {/* Hover detection sphere */}
       <mesh
         renderOrder={-1}
         onPointerOver={(e) => {
@@ -94,11 +90,10 @@ function Constellation({
       {/* Stars (skills) */}
       {category.skills.map((skill) => (
         <group key={skill.name} position={[skill.x, skill.y, 0]}>
-          {/* Star sphere */}
           <mesh
             renderOrder={3}
             onPointerOver={(e) => {
-              e.stopPropagation(); // So we don’t exit the bounding sphere
+              e.stopPropagation();
               setHoveredSkill(skill.name);
             }}
             onPointerOut={(e) => {
@@ -151,10 +146,12 @@ Constellation.propTypes = {
   setHoveredSkill: PropTypes.func.isRequired,
 };
 
-export default function Skills() {
-  // eslint-disable-next-line no-unused-vars
+export default function Skills({ language }) {
   const [hoveredSkill, setHoveredSkill] = useState(null);
   const [hoveredCategory, setHoveredCategory] = useState(null);
+
+  // Select the translated skill data
+  const skills = skillData[language];
 
   return (
     <div className="relative w-full h-full" style={{ height: '100vh' }}>
@@ -187,9 +184,8 @@ export default function Skills() {
         <directionalLight intensity={0.6} position={[20, 20, 20]} />
 
         {/* Constellations */}
-        {skillData.map((category, index) => {
-          // Position each constellation in a circle
-          const angle = (index / skillData.length) * Math.PI * 2;
+        {skills.map((category, index) => {
+          const angle = (index / skills.length) * Math.PI * 2;
           const x = Math.cos(angle) * CONSTELLATION_RADIUS;
           const y = Math.sin(angle) * CONSTELLATION_RADIUS;
 
@@ -208,3 +204,7 @@ export default function Skills() {
     </div>
   );
 }
+
+Skills.propTypes = {
+  language: PropTypes.oneOf(['en', 'fr']).isRequired,
+};
